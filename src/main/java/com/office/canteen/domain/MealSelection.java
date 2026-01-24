@@ -61,8 +61,4 @@ public class MealSelection {
     public void setMealType(MealType mealType) {
         this.mealType = mealType;
     }
-
-    public boolean isEating() {
-        return mealType != MealType.NONE;
-    }
-}    // getters & setters (or Lombok later)
+}
