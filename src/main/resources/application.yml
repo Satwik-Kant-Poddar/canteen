@@ -1,4 +1,62 @@
+# -----------------------------
+# Server configuration
+# -----------------------------
+server:
+  port: 8080                 # Application will run on port 8080
+
+  error:
+    include-message: always
+# -----------------------------
+# Spring application settings
+# -----------------------------
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  application:
+    name: canteen-management  # Logical name of the application
+
+
+  # -----------------------------
+  # DataSource (Database) config
+  # -----------------------------
+  datasource:
+    url: jdbc:h2:mem:canteen-db   # In-memory H2 database (resets on restart)
+    driver-class-name: org.h2.Driver  # H2 JDBC driver
+    username: sa                  # Default H2 username
+    password:                     # Default H2 password (empty)
+
+
+  # -----------------------------
+  # H2 console (DEV only)
+  # -----------------------------
+  h2:
+    console:
+      enabled: true               # Enables browser-based DB console
+      path: /h2-console           # URL path to access H2 console
+
+
+  # -----------------------------
+  # JPA / Hibernate configuration
+  # -----------------------------
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect  # SQL dialect for H2
+    show-sql: true               # Print SQL queries in logs
+
+    hibernate:
+      ddl-auto: update           # Auto-create/update DB schema (DEV only)
+
+    properties:
+      hibernate:
+        format_sql: true         # Pretty-print SQL for readability
+
+
+# -----------------------------
+# Logging configuration
+# -----------------------------
+logging:
+  file:
+    name: logs/canteen-app.log   # Log file path (relative to project root)
+  level:
+    org.hibernate.SQL: DEBUG     # Logs generated SQL queries
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # Logs SQL parameter values
+
+
+
