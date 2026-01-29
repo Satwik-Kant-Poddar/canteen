@@ -2,18 +2,21 @@ package com.office.canteen.dto;
 
 import com.office.canteen.domain.MealType;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.FutureOrPresent;
 
 import java.time.LocalDate;
 
-public class MealSelectionDTO {
-    @NotNull(message = "Employee ID is required")
+public class MealRangeRequestDTO {
+
+    @NotNull
     private Long employeeId;
 
-    @NotNull(message = "Meal date is required")
-    @FutureOrPresent(message = "Meal date cannot be in the past")
-    private LocalDate mealDate;
+    @NotNull
+    private LocalDate fromDate;
 
+    @NotNull
+    private LocalDate toDate;
+
+    @NotNull
     private MealType mealType;
 
     public Long getEmployeeId() {
@@ -24,12 +27,20 @@ public class MealSelectionDTO {
         this.employeeId = employeeId;
     }
 
-    public LocalDate getMealDate() {
-        return mealDate;
+    public LocalDate getFromDate() {
+        return fromDate;
     }
 
-    public void setMealDate(LocalDate mealDate) {
-        this.mealDate = mealDate;
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate = fromDate;
+    }
+
+    public LocalDate getToDate() {
+        return toDate;
+    }
+
+    public void setToDate(LocalDate toDate) {
+        this.toDate = toDate;
     }
 
     public MealType getMealType() {

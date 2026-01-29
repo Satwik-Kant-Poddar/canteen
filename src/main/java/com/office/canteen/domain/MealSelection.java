@@ -22,7 +22,7 @@ public class MealSelection {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "meal_type", nullable = false)
-    private MealType mealType = MealType.NONE;
+    private MealType mealType = MealType.NO_MEAL;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
