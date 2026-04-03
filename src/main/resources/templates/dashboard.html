@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Canteen Meal Dashboard</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+
+    <style>
+        /* Temporary inline CSS so UI works even without external file */
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f6f7f9;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .page {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* LEFT DASHBOARD */
+        .dashboard {
+            width: 260px;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .dashboard h2 {
+            margin-top: 0;
+        }
+
+        .stat {
+            margin: 12px 0;
+            font-size: 15px;
+        }
+
+        .stat strong {
+            font-size: 20px;
+        }
+
+        /* RIGHT CALENDAR */
+        .calendar {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .calendar-header h2 {
+            margin: 0;
+        }
+
+        .week {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .day-card {
+            background: #f9fafb;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .day-card h4 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .day-card span {
+            font-size: 12px;
+            color: #777;
+        }
+
+        .day-card select {
+            margin-top: 10px;
+            width: 100%;
+            padding: 6px;
+        }
+
+        .actions {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .save-btn {
+            padding: 8px 20px;
+            border-radius: 6px;
+            border: none;
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        .save-btn.active {
+            background: #2ecc71;
+            color: #fff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <!-- LEFT: DASHBOARD -->
+    <div class="dashboard">
+        <h2>Dashboard</h2>
+
+        <div class="stat">
+            <strong>5</strong> Days
+        </div>
+        <div class="stat">
+            <strong>2</strong> Veg
+        </div>
+        <div class="stat">
+            <strong>2</strong> Non-Veg
+        </div>
+        <div class="stat">
+            <strong>1</strong> No Choice
+        </div>
+    </div>
+
+    <!-- RIGHT: CURRENT WEEK -->
+    <div class="calendar">
+
+        <div class="calendar-header">
+            <button>&lt; Prev</button>
+            <h2>Current Week</h2>
+            <button>Next &gt;</button>
+        </div>
+
+        <div class="week">
+
+            <!-- MONDAY -->
+            <div class="day-card">
+                <h4>Monday</h4>
+                <span>05 Feb</span>
+                <select>
+                    <option>NO_CHOICE</option>
+                    <option>VEG</option>
+                    <option>NON_VEG</option>
+                    <option>NO_MEAL</option>
+                </select>
+            </div>
+
+            <!-- TUESDAY -->
+            <div class="day-card">
+                <h4>Tuesday</h4>
+                <span>06 Feb</span>
+                <select>
+                    <option>NO_CHOICE</option>
+                    <option>VEG</option>
+                    <option>NON_VEG</option>
+                    <option>NO_MEAL</option>
+                </select>
+            </div>
+
+            <!-- WEDNESDAY -->
+            <div class="day-card">
+                <h4>Wednesday</h4>
+                <span>07 Feb</span>
+                <select>
+                    <option>NO_CHOICE</option>
+                    <option>VEG</option>
+                    <option>NON_VEG</option>
+                    <option>NO_MEAL</option>
+                </select>
+            </div>
+
+            <!-- THURSDAY -->
+            <div class="day-card">
+                <h4>Thursday</h4>
+                <span>08 Feb</span>
+                <select>
+                    <option>NO_CHOICE</option>
+                    <option>VEG</option>
+                    <option>NON_VEG</option>
+                    <option>NO_MEAL</option>
+                </select>
+            </div>
+
+            <!-- FRIDAY -->
+            <div class="day-card">
+                <h4>Friday</h4>
+                <span>09 Feb</span>
+                <select>
+                    <option>NO_CHOICE</option>
+                    <option>VEG</option>
+                    <option>NON_VEG</option>
+                    <option>NO_MEAL</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="actions">
+            <button class="save-btn">Save</button>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

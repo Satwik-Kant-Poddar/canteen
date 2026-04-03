@@ -33,6 +33,9 @@ public class MealSelection {
         updatedAt = createdAt;
     }
 
+    public MealSelection() {
+    }
+
     @PreUpdate
     void onUpdate() {
         updatedAt = LocalDateTime.now();

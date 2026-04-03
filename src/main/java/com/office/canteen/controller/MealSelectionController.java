@@ -1,11 +1,13 @@
 package com.office.canteen.controller;
 
+import com.office.canteen.dto.MealCalendarDTO;
 import com.office.canteen.dto.MealRangeRequestDTO;
 import com.office.canteen.dto.MealSelectionDTO;
 import com.office.canteen.dto.MealSelectionRequestDTO;
 import com.office.canteen.mapper.MealSelectionMapper;
 import com.office.canteen.service.MealSelectionService;
 import jakarta.validation.Valid;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -44,7 +46,7 @@ public class MealSelectionController {
     }
 
     @GetMapping("/range")
-    public List<MealSelectionDTO> getMealsInRange(
+    public List<MealCalendarDTO> getMealsInRange(
             @RequestParam Long employeeId,
             @RequestParam LocalDate fromDate,
             @RequestParam LocalDate toDate
@@ -56,6 +58,7 @@ public class MealSelectionController {
         );
     }
 
+    @Transactional
     @PostMapping("/bulk")
     public void selectMealsBulk(
             @Valid @RequestBody List<MealSelectionRequestDTO> requests

@@ -1,6 +1,8 @@
 package com.office.canteen.mapper;
 
 import com.office.canteen.domain.MealSelection;
+import com.office.canteen.domain.MealType;
+import com.office.canteen.dto.MealCalendarDTO;
 import com.office.canteen.dto.MealSelectionDTO;
 
 import java.time.LocalDate;
@@ -27,6 +29,20 @@ public class MealSelectionMapper {
         dto.setEmployeeId(employeeId);
         dto.setMealDate(mealDate);
         dto.setMealType(null); // NONE
+        return dto;
+    }
+
+    public static MealCalendarDTO toCalendarDto(MealSelection entity) {
+        MealCalendarDTO dto = new MealCalendarDTO();
+        dto.setDate(entity.getMealDate());
+        dto.setMealType(entity.getMealType());
+        return dto;
+    }
+
+    public static MealCalendarDTO emptyCalendar(LocalDate date) {
+        MealCalendarDTO dto = new MealCalendarDTO();
+        dto.setDate(date);
+        dto.setMealType(MealType.NONE);
         return dto;
     }
 }
