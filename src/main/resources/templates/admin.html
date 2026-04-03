@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Canteen Admin — view all employees meal selections.">
+    <title>Canteen Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:          #0f1117;
+            --surface:     #1a1d27;
+            --surface2:    #22263a;
+            --surface3:    #2a2f45;
+            --border:      rgba(255,255,255,0.07);
+            --text:        #e8eaf0;
+            --muted:       #7b80a0;
+            --accent:      #6c63ff;
+            --accent-glow: rgba(108,99,255,0.25);
+            --veg:         #22c55e;
+            --veg-bg:      rgba(34,197,94,0.15);
+            --nonveg:      #f97316;
+            --nonveg-bg:   rgba(249,115,22,0.15);
+            --nomeal:      #64748b;
+            --nomeal-bg:   rgba(100,116,139,0.12);
+            --none-bg:     rgba(51,65,85,0.3);
+            --radius:      14px;
+            --shadow:      0 4px 24px rgba(0,0,0,0.4);
+        }
+
+        [data-theme="light"] {
+            --bg:          #f4f6f8;
+            --surface:     #ffffff;
+            --surface2:    #f0f2f5;
+            --surface3:    #e4e7eb;
+            --border:      rgba(0,0,0,0.08);
+            --text:        #1e293b;
+            --muted:       #64748b;
+            --accent:      #4f46e5;
+            --accent-glow: rgba(79,70,229,0.2);
+            --veg:         #16a34a;
+            --veg-bg:      rgba(22,163,74,0.15);
+            --nonveg:      #ea580c;
+            --nonveg-bg:   rgba(234,88,12,0.15);
+            --nomeal:      #64748b;
+            --nomeal-bg:   rgba(100,116,139,0.12);
+            --none-bg:     rgba(51,65,85,0.1);
+            --shadow:      0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; transition: background 0.3s, color 0.3s; }
+
+        /* ── Header ────────────────────────────────────────────────── */
+        .header {
+            background:var(--surface); border-bottom:1px solid var(--border);
+            padding:0 32px; height:64px; display:flex; align-items:center;
+            justify-content:space-between; position:sticky; top:0; z-index:100;
+        }
+        .header-left { display:flex; align-items:center; gap:20px; }
+        .header-logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:-.3px; }
+        .nav-link {
+            font-size:13px; font-weight:500; color:var(--muted);
+            text-decoration:none; padding:6px 14px; border-radius:8px;
+            border:1px solid var(--border); transition:color .2s,background .2s;
+        }
+        .nav-link:hover { color:var(--text); background:var(--surface2); }
+        .nav-link.active { color:var(--accent); border-color:rgba(108,99,255,.35); background:rgba(108,99,255,.08); }
+
+        /* ── Content ───────────────────────────────────────────────── */
+        .page { max-width:1400px; margin:0 auto; padding:28px 32px; display:flex; flex-direction:column; gap:20px; }
+
+        /* ── Controls bar ──────────────────────────────────────────── */
+        .controls {
+            background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+            padding:16px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+        }
+        .ctrl-group { display:flex; align-items:center; gap:8px; }
+        .ctrl-label { font-size:12px; color:var(--muted); font-weight:500; white-space:nowrap; }
+        .ctrl-input {
+            background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+            color:var(--text); font-size:13px; font-family:'Inter',sans-serif;
+            padding:7px 12px; outline:none; transition:border-color .2s;
+        }
+        .ctrl-input:focus { border-color:var(--accent); }
+        .ctrl-input[type="date"] { cursor:pointer; }
+        .load-btn {
+            background:var(--accent); color:#fff; border:none; border-radius:8px;
+            font-size:13px; font-weight:600; font-family:'Inter',sans-serif;
+            padding:8px 20px; cursor:pointer; transition:opacity .2s;
+        }
+        .load-btn:hover { opacity:.88; }
+
+        /* Quick period buttons */
+        .period-pills { display:flex; gap:6px; }
+        .pill {
+            background:var(--surface2); border:1px solid var(--border); border-radius:6px;
+            color:var(--muted); font-size:12px; font-weight:600; font-family:'Inter',sans-serif;
+            padding:5px 12px; cursor:pointer; transition:background .2s,color .2s;
+        }
+        .pill:hover  { background:var(--surface3); color:var(--text); }
+        .pill.active { background:var(--accent);   color:#fff; border-color:var(--accent); }
+
+        .ctrl-spacer { flex:1; }
+
+        .export-btn {
+            background:var(--surface2); border:1px solid var(--border); border-radius:8px;
+            color:var(--muted); font-size:13px; font-weight:500; font-family:'Inter',sans-serif;
+            padding:7px 16px; cursor:pointer; display:flex; align-items:center; gap:6px;
+            transition:background .2s,color .2s;
+        }
+        .export-btn:hover { background:var(--surface3); color:var(--text); }
+
+        /* ── Summary cards ────────────────────────────────────────── */
+        .summary-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+
+        .summary-card {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius); padding:18px 20px;
+            display:flex; flex-direction:column; gap:6px;
+            position:relative; overflow:hidden;
+        }
+        .summary-card::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:3px;
+        }
+        .card-total::before   { background:var(--accent); }
+        .card-veg::before     { background:var(--veg); }
+        .card-nonveg::before  { background:var(--nonveg); }
+        .card-nomeal::before  { background:var(--nomeal); }
+
+        .summary-label { font-size:12px; color:var(--muted); font-weight:500; text-transform:uppercase; letter-spacing:.6px; }
+        .summary-value { font-size:32px; font-weight:700; letter-spacing:-1px; }
+        .summary-sub   { font-size:12px; color:var(--muted); }
+
+        /* ── Table wrapper ────────────────────────────────────────── */
+        .table-card {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:var(--radius); overflow:hidden;
+        }
+        .table-header-bar {
+            padding:14px 20px; border-bottom:1px solid var(--border);
+            display:flex; align-items:center; justify-content:space-between;
+        }
+        .table-title { font-size:14px; font-weight:600; }
+        .table-meta  { font-size:12px; color:var(--muted); }
+
+        .table-scroll { overflow-x:auto; }
+
+        table {
+            width:100%; border-collapse:collapse;
+            font-size:13px;
+        }
+
+        thead th {
+            background:var(--surface2);
+            padding:10px 14px;
+            text-align:left;
+            font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.7px;
+            color:var(--muted);
+            border-bottom:1px solid var(--border);
+            white-space:nowrap;
+            position:sticky; top:0;
+        }
+
+        thead th.date-col { text-align:center; min-width:90px; }
+
+        tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
+        tbody tr:last-child { border-bottom:none; }
+        tbody tr:hover { background:var(--surface2); }
+
+        tbody td { padding:10px 14px; vertical-align:middle; }
+        tbody td.emp-col { font-weight:600; font-size:13px; }
+        tbody td.date-td { text-align:center; }
+        tbody td.total-col { text-align:center; font-weight:600; }
+
+        /* Meal pills */
+        .meal-pill {
+            display:inline-flex; align-items:center; gap:4px;
+            padding:3px 10px; border-radius:20px;
+            font-size:11px; font-weight:600; white-space:nowrap;
+        }
+        .pill-veg     { background:var(--veg-bg);    color:var(--veg);    }
+        .pill-non_veg { background:var(--nonveg-bg); color:var(--nonveg); }
+        .pill-no_meal { background:var(--nomeal-bg); color:var(--muted);  }
+        .pill-none    { color:#3d4266; font-weight:400; font-size:11px; }
+
+        /* ── Empty state ──────────────────────────────────────────── */
+        .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+        .empty-state .icon { font-size:48px; margin-bottom:16px; }
+
+        /* ── Spinner ──────────────────────────────────────────────── */
+        .spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin:40px auto; }
+        @keyframes spin { to{ transform:rotate(360deg); } }
+
+        /* ── Toast ────────────────────────────────────────────────── */
+        #toast-container { position:fixed; bottom:28px; right:28px; display:flex; flex-direction:column; gap:10px; z-index:999; }
+        .toast { padding:12px 20px; border-radius:10px; font-size:14px; font-weight:500; min-width:250px; box-shadow:var(--shadow); animation:slideIn .3s ease; }
+        .toast.success { background:#166534; border:1px solid rgba(34,197,94,.3); color:#86efac; }
+        .toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,.3);  color:#fca5a5; }
+        @keyframes slideIn { from{transform:translateX(60px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+        @media(max-width:768px){
+            .summary-row { grid-template-columns:1fr 1fr; }
+            .page { padding:16px; }
+            .header { padding:0 16px; }
+        }
+    </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+
+<header class="header">
+    <div class="header-left">
+        <div class="header-logo"><span>🍽️</span><span>Canteen Planner</span></div>
+        <a class="nav-link" href="/">Employee View</a>
+        <a class="nav-link active" href="/admin">Admin</a>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+        <button id="themeToggleBtn" onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;font-size:14px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;" title="Toggle Light/Dark Mode">
+            <span id="themeIcon">☀️</span>
+        </button>
+        <div style="font-size:12px;color:var(--muted)">🔐 Admin Dashboard</div>
+    </div>
+</header>
+
+<div class="page">
+
+    <!-- Controls -->
+    <div class="controls">
+        <div class="ctrl-group">
+            <span class="ctrl-label">From</span>
+            <input type="date" id="fromDate" class="ctrl-input" />
+        </div>
+        <div class="ctrl-group">
+            <span class="ctrl-label">To</span>
+            <input type="date" id="toDate" class="ctrl-input" />
+        </div>
+        <button class="load-btn" onclick="loadReport()">Load Report</button>
+
+        <div class="period-pills">
+            <button class="pill" id="pill-today"  onclick="setQuick('today')">Today</button>
+            <button class="pill active" id="pill-week"  onclick="setQuick('week')">This Week</button>
+            <button class="pill" id="pill-month" onclick="setQuick('month')">This Month</button>
+            <button class="pill" id="pill-next"  onclick="setQuick('next')">Next Month</button>
+        </div>
+
+        <div class="ctrl-spacer"></div>
+
+        <button class="export-btn" onclick="exportCSV()">
+            <span>⬇</span> Export CSV
+        </button>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="summary-row">
+        <div class="summary-card card-total">
+            <div class="summary-label">Total Selections</div>
+            <div class="summary-value" id="s-total">—</div>
+            <div class="summary-sub" id="s-emp-count">— employees</div>
+        </div>
+        <div class="summary-card card-veg">
+            <div class="summary-label">🥦 Vegetarian</div>
+            <div class="summary-value" id="s-veg">—</div>
+            <div class="summary-sub" id="s-veg-pct"></div>
+        </div>
+        <div class="summary-card card-nonveg">
+            <div class="summary-label">🍗 Non-Vegetarian</div>
+            <div class="summary-value" id="s-nonveg">—</div>
+            <div class="summary-sub" id="s-nonveg-pct"></div>
+        </div>
+        <div class="summary-card card-nomeal">
+            <div class="summary-label">🚫 No Meal</div>
+            <div class="summary-value" id="s-nomeal">—</div>
+            <div class="summary-sub" id="s-nomeal-pct"></div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card">
+        <div class="table-header-bar">
+            <span class="table-title">Meal Selections by Employee</span>
+            <span class="table-meta" id="tableMetaLabel">Select a date range and click Load.</span>
+        </div>
+        <div class="table-scroll" id="tableArea">
+            <div class="empty-state">
+                <div class="icon">📊</div>
+                <p>Select a date range and click <strong>Load Report</strong>.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+/* ── Helpers ──────────────────────────────────────────────────────── */
+const MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+/* ── Theme ────────────────────────────────────────────────────────── */
+function updateThemeIcon() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
+}
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon();
+}
+updateThemeIcon();
+
+function isoDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function displayDate(dateStr) {
+    const d = new Date(dateStr+'T00:00:00');
+    return `${DAY_SHORT[d.getDay()]} ${d.getDate()} ${MON_SHORT[d.getMonth()]}`;
+}
+
+function addDays(d, n) { const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+function isWeekend(dateStr) { const d=new Date(dateStr+'T00:00:00'); return d.getDay()===0||d.getDay()===6; }
+
+function mondayOfWeek() {
+    const t=new Date(); const dow=t.getDay();
+    return new Date(t.getFullYear(),t.getMonth(),t.getDate()-dow+(dow===0?-6:1));
+}
+
+/* ── Quick period presets ─────────────────────────────────────────── */
+function setQuick(period) {
+    const today = new Date();
+    let from, to;
+
+    document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    document.getElementById(`pill-${period}`).classList.add('active');
+
+    if (period === 'today') {
+        from = to = isoDate(today);
+    } else if (period === 'week') {
+        const mon = mondayOfWeek();
+        from = isoDate(mon);
+        to   = isoDate(addDays(mon,4));
+    } else if (period === 'month') {
+        from = isoDate(new Date(today.getFullYear(), today.getMonth(), 1));
+        to   = isoDate(new Date(today.getFullYear(), today.getMonth()+1, 0));
+    } else if (period === 'next') {
+        from = isoDate(new Date(today.getFullYear(), today.getMonth()+1, 1));
+        to   = isoDate(new Date(today.getFullYear(), today.getMonth()+2, 0));
+    }
+
+    document.getElementById('fromDate').value = from;
+    document.getElementById('toDate').value   = to;
+    loadReport();
+}
+
+/* ── Load report ──────────────────────────────────────────────────── */
+let reportData = [];
+
+async function loadReport() {
+    const from = document.getElementById('fromDate').value;
+    const to   = document.getElementById('toDate').value;
+
+    if (!from || !to) { showToast('Please select a date range.','error'); return; }
+    if (from > to)    { showToast('From date must be before To date.','error'); return; }
+
+    document.getElementById('tableArea').innerHTML =
+        '<div style="text-align:center;padding:40px"><div class="spinner"></div></div>';
+
+    try {
+        const res = await fetch(`/api/meals/admin-report?fromDate=${from}&toDate=${to}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        reportData = await res.json(); // [{employeeId, mealDate, mealType}]
+    } catch(e) {
+        document.getElementById('tableArea').innerHTML =
+            '<div class="empty-state"><div class="icon">⚠️</div><p>Failed to load data. Is the server running?</p></div>';
+        showToast('Failed to load report.','error');
+        return;
+    }
+
+    renderReport(from, to);
+}
+
+/* ── Render ───────────────────────────────────────────────────────── */
+function renderReport(from, to) {
+    // Build list of weekday dates in range
+    const dates = [];
+    for (let d = new Date(from+'T00:00:00'); isoDate(d) <= to; d.setDate(d.getDate()+1)) {
+        if (!isWeekend(isoDate(new Date(d)))) dates.push(isoDate(new Date(d)));
+    }
+
+    // Group by employee: Map<empId, Map<date, mealType>>
+    const empMap = {};
+    reportData.forEach(row => {
+        if (!empMap[row.employeeId]) empMap[row.employeeId] = {};
+        empMap[row.employeeId][row.mealDate] = row.mealType;
+    });
+
+    const empIds = Object.keys(empMap).map(Number).sort((a,b)=>a-b);
+
+    // Summary
+    const counts = { VEG:0, NON_VEG:0, NO_MEAL:0 };
+    reportData.forEach(r => { if (counts[r.mealType]!==undefined) counts[r.mealType]++; });
+    const total = reportData.length;
+
+    document.getElementById('s-total').textContent    = total;
+    document.getElementById('s-emp-count').textContent= `${empIds.length} employee${empIds.length!==1?'s':''}`;
+    document.getElementById('s-veg').textContent      = counts.VEG;
+    document.getElementById('s-nonveg').textContent   = counts.NON_VEG;
+    document.getElementById('s-nomeal').textContent   = counts.NO_MEAL;
+    document.getElementById('s-veg-pct').textContent    = total ? `${Math.round(counts.VEG/total*100)}% of selections` : '';
+    document.getElementById('s-nonveg-pct').textContent = total ? `${Math.round(counts.NON_VEG/total*100)}% of selections` : '';
+    document.getElementById('s-nomeal-pct').textContent = total ? `${Math.round(counts.NO_MEAL/total*100)}% of selections` : '';
+    document.getElementById('tableMetaLabel').textContent =
+        `${total} selection${total!==1?'s':''} · ${empIds.length} employee${empIds.length!==1?'s':''} · ${dates.length} day${dates.length!==1?'s':''}`;
+
+    if (!empIds.length) {
+        document.getElementById('tableArea').innerHTML =
+            '<div class="empty-state"><div class="icon">🗓️</div><p>No meal selections found for this period.</p></div>';
+        return;
+    }
+
+    // Build table
+    let html = '<table>';
+
+    // Head
+    html += '<thead><tr>';
+    html += '<th>Emp ID</th>';
+    dates.forEach(d => {
+        html += `<th class="date-col">${displayDate(d)}</th>`;
+    });
+    html += '<th style="text-align:center">Total</th>';
+    html += '</tr></thead>';
+
+    // Body
+    html += '<tbody>';
+    empIds.forEach(empId => {
+        const row = empMap[empId];
+        let empTotal = 0;
+        html += `<tr><td class="emp-col">👤 ${empId}</td>`;
+        dates.forEach(d => {
+            const mt = row[d] || null;
+            if (mt) empTotal++;
+            html += `<td class="date-td">${mealPill(mt)}</td>`;
+        });
+        html += `<td class="total-col">${empTotal || '—'}</td>`;
+        html += '</tr>';
+    });
+    html += '</tbody>';
+
+    // Footer totals row
+    html += '<tfoot><tr>';
+    html += `<td style="font-weight:600;padding:10px 14px;color:var(--muted);font-size:12px;text-transform:uppercase">TOTAL</td>`;
+    dates.forEach(d => {
+        const dayCount = reportData.filter(r => r.mealDate===d && r.mealType!=='NO_MEAL').length;
+        html += `<td class="date-td" style="font-weight:600;font-size:12px;color:var(--muted)">${dayCount||'—'}</td>`;
+    });
+    html += `<td class="total-col" style="font-weight:700">${reportData.filter(r=>r.mealType!=='NO_MEAL').length}</td>`;
+    html += '</tr></tfoot>';
+
+    html += '</table>';
+    document.getElementById('tableArea').innerHTML = html;
+}
+
+function mealPill(mt) {
+    if (!mt || mt==='NONE') return `<span class="meal-pill pill-none">—</span>`;
+    const map = { VEG:'🥦 Veg', NON_VEG:'🍗 Non-Veg', NO_MEAL:'🚫 No Meal' };
+    return `<span class="meal-pill pill-${mt.toLowerCase()}">${map[mt]||mt}</span>`;
+}
+
+/* ── CSV Export ───────────────────────────────────────────────────── */
+function exportCSV() {
+    if (!reportData.length) { showToast('No data to export.','error'); return; }
+
+    const from = document.getElementById('fromDate').value;
+    const to   = document.getElementById('toDate').value;
+
+    const dates = [];
+    for (let d=new Date(from+'T00:00:00'); isoDate(d)<=to; d.setDate(d.getDate()+1)) {
+        if (!isWeekend(isoDate(new Date(d)))) dates.push(isoDate(new Date(d)));
+    }
+
+    const empMap = {};
+    reportData.forEach(row => {
+        if (!empMap[row.employeeId]) empMap[row.employeeId] = {};
+        empMap[row.employeeId][row.mealDate] = row.mealType;
+    });
+    const empIds = Object.keys(empMap).map(Number).sort((a,b)=>a-b);
+
+    let csv = `Employee ID,${dates.join(',')},Total\n`;
+    empIds.forEach(empId => {
+        const row = empMap[empId];
+        let total = 0;
+        const cells = dates.map(d => { const mt=row[d]||''; if(mt) total++; return mt; });
+        csv += `${empId},${cells.join(',')},${total}\n`;
+    });
+
+    const blob  = new Blob([csv], { type:'text/csv' });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    a.href      = url;
+    a.download  = `canteen-report-${from}-to-${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV exported!','success');
+}
+
+/* ── Toast ────────────────────────────────────────────────────────── */
+function showToast(msg, type='success') {
+    const c=document.getElementById('toast-container');
+    const t=document.createElement('div');
+    t.className=`toast ${type}`; t.textContent=msg;
+    c.appendChild(t);
+    setTimeout(()=>t.remove(),4000);
+}
+
+/* ── Init ─────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+    // Default to current week
+    setQuick('week');
+
+    // Clear pill highlight on manual date edit
+    ['fromDate','toDate'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+        });
+    });
+});
+</script>
+</body>
+</html>

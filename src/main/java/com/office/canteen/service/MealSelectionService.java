@@ -3,9 +3,8 @@ package com.office.canteen.service;
 import com.office.canteen.domain.MealSelection;
 import com.office.canteen.domain.MealType;
 import com.office.canteen.dto.MealCalendarDTO;
-import com.office.canteen.dto.MealSelectionDTO;
+import com.office.canteen.dto.MealSelectionRequestDTO;
 import com.office.canteen.exception.MealSelectionLockedException;
-import com.office.canteen.mapper.MealSelectionMapper;
 import com.office.canteen.repository.MealSelectionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,5 +123,20 @@ public class MealSelectionService {
             selectMeal(employeeId, date, mealType);
             date = date.plusDays(1);
         }
+    }
+
+    @Transactional
+    public void selectMealsBulk(List<MealSelectionRequestDTO> requests) {
+        requests.forEach(req ->
+                selectMeal(req.getEmployeeId(), req.getMealDate(), req.getMealType())
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<MealSelection> getAllSelectionsInRange(LocalDate from, LocalDate to) {
+        if (from.isAfter(to)) {
+            throw new IllegalArgumentException("fromDate cannot be after toDate");
+        }
+        return repository.findAllByMealDateBetweenOrderByMealDateAscEmployeeIdAsc(from, to);
     }
 }

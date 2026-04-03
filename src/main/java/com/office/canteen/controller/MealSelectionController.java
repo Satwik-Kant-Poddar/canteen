@@ -7,11 +7,12 @@ import com.office.canteen.dto.MealSelectionRequestDTO;
 import com.office.canteen.mapper.MealSelectionMapper;
 import com.office.canteen.service.MealSelectionService;
 import jakarta.validation.Valid;
-import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/meals")
@@ -42,7 +43,7 @@ public class MealSelectionController {
     ) {
         return service.getMealSelection(employeeId, mealDate)
                 .map(MealSelectionMapper::toDto)
-                .orElseGet(() -> MealSelectionMapper.empty(employeeId,mealDate));
+                .orElseGet(() -> MealSelectionMapper.empty(employeeId, mealDate));
     }
 
     @GetMapping("/range")
@@ -51,25 +52,14 @@ public class MealSelectionController {
             @RequestParam LocalDate fromDate,
             @RequestParam LocalDate toDate
     ) {
-        return service.getMealSelectionsInRange(
-                employeeId,
-                fromDate,
-                toDate
-        );
+        return service.getMealSelectionsInRange(employeeId, fromDate, toDate);
     }
 
-    @Transactional
     @PostMapping("/bulk")
     public void selectMealsBulk(
             @Valid @RequestBody List<MealSelectionRequestDTO> requests
     ) {
-        requests.forEach(req ->
-                service.selectMeal(
-                        req.getEmployeeId(),
-                        req.getMealDate(),
-                        req.getMealType()
-                )
-        );
+        service.selectMealsBulk(requests);
     }
 
     @PostMapping("/range")
@@ -82,5 +72,17 @@ public class MealSelectionController {
                 dto.getToDate(),
                 dto.getMealType()
         );
+    }
+
+    /** Admin: all employees' selections for a date range */
+    @GetMapping("/admin-report")
+    public List<MealSelectionDTO> getAdminReport(
+            @RequestParam LocalDate fromDate,
+            @RequestParam LocalDate toDate
+    ) {
+        return service.getAllSelectionsInRange(fromDate, toDate)
+                .stream()
+                .map(MealSelectionMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

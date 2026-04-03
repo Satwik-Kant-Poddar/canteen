@@ -20,4 +20,9 @@ public interface MealSelectionRepository
             LocalDate from,
             LocalDate to
     );
+
+    List<MealSelection> findAllByMealDateBetweenOrderByMealDateAscEmployeeIdAsc(
+            LocalDate from,
+            LocalDate to
+    );
 }

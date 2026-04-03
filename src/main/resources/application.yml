@@ -13,6 +13,12 @@ spring:
   application:
     name: canteen-management  # Logical name of the application
 
+  # -----------------------------
+  # Thymeleaf (dev: disable cache)
+  # -----------------------------
+  thymeleaf:
+    cache: false               # Reload templates on every request (DEV only)
+
 
   # -----------------------------
   # DataSource (Database) config
@@ -37,7 +43,7 @@ spring:
   # JPA / Hibernate configuration
   # -----------------------------
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect  # SQL dialect for H2
+    open-in-view: false          # Prevent DB queries during view rendering
     show-sql: true               # Print SQL queries in logs
 
     hibernate:

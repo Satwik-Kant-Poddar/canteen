@@ -2,223 +2,653 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Canteen Meal Dashboard</title>
-
-    <!-- CSS -->
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Office Canteen Meal Planner — plan your weekly or monthly meals.">
+    <title>Canteen Meal Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Temporary inline CSS so UI works even without external file */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
-            font-family: Arial, sans-serif;
-            background: #f6f7f9;
-            margin: 0;
-            padding: 40px;
+        :root {
+            --bg:          #0f1117;
+            --surface:     #1a1d27;
+            --surface2:    #22263a;
+            --surface3:    #2a2f45;
+            --border:      rgba(255,255,255,0.07);
+            --border2:     rgba(255,255,255,0.12);
+            --text:        #e8eaf0;
+            --muted:       #7b80a0;
+            --accent:      #6c63ff;
+            --accent-glow: rgba(108,99,255,0.25);
+            --veg:         #22c55e;
+            --veg-bg:      rgba(34,197,94,0.15);
+            --nonveg:      #f97316;
+            --nonveg-bg:   rgba(249,115,22,0.15);
+            --nomeal:      #64748b;
+            --nomeal-bg:   rgba(100,116,139,0.15);
+            --locked:      #ef4444;
+            --locked-bg:   rgba(239,68,68,0.10);
+            --today:       rgba(108,99,255,0.18);
+            --radius:      14px;
+            --shadow:      0 4px 24px rgba(0,0,0,0.4);
         }
 
-        .page {
-            display: flex;
-            gap: 30px;
-            max-width: 1200px;
-            margin: auto;
+        [data-theme="light"] {
+            --bg:          #f4f6f8;
+            --surface:     #ffffff;
+            --surface2:    #f0f2f5;
+            --surface3:    #e4e7eb;
+            --border:      rgba(0,0,0,0.08);
+            --border2:     rgba(0,0,0,0.15);
+            --text:        #1e293b;
+            --muted:       #64748b;
+            --accent:      #4f46e5;
+            --accent-glow: rgba(79,70,229,0.2);
+            --veg:         #16a34a;
+            --veg-bg:      rgba(22,163,74,0.15);
+            --nonveg:      #ea580c;
+            --nonveg-bg:   rgba(234,88,12,0.15);
+            --nomeal:      #64748b;
+            --nomeal-bg:   rgba(100,116,139,0.15);
+            --locked:      #dc2626;
+            --locked-bg:   rgba(220,38,38,0.08);
+            --today:       rgba(79,70,229,0.12);
+            --shadow:      0 4px 20px rgba(0,0,0,0.05);
         }
 
-        /* LEFT DASHBOARD */
-        .dashboard {
-            width: 260px;
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
+        body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; line-height:1.5; transition: background 0.3s, color 0.3s; }
 
-        .dashboard h2 {
-            margin-top: 0;
+        /* Header */
+        .header {
+            background:var(--surface); border-bottom:1px solid var(--border);
+            padding:0 32px; height:64px; display:flex; align-items:center;
+            justify-content:space-between; position:sticky; top:0; z-index:100;
         }
+        .header-logo { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; letter-spacing:-.3px; }
+        .header-right { display:flex; align-items:center; gap:16px; }
 
-        .stat {
-            margin: 12px 0;
-            font-size: 15px;
-        }
+        /* View Toggle */
+        .view-toggle { display:flex; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:3px; gap:2px; }
+        .toggle-btn { background:transparent; border:none; color:var(--muted); font-size:13px; font-weight:600; font-family:'Inter',sans-serif; padding:6px 18px; border-radius:7px; cursor:pointer; transition:background .2s,color .2s; }
+        .toggle-btn.active { background:var(--accent); color:#fff; }
 
-        .stat strong {
-            font-size: 20px;
-        }
+        /* Employee control */
+        .employee-control { display:flex; align-items:center; gap:10px; }
+        .employee-control label { font-size:13px; color:var(--muted); font-weight:500; }
+        .employee-input { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; font-family:'Inter',sans-serif; padding:6px 12px; width:90px; outline:none; transition:border-color .2s; }
+        .employee-input:focus { border-color:var(--accent); }
+        .load-btn { background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; font-family:'Inter',sans-serif; padding:7px 16px; cursor:pointer; transition:opacity .2s,transform .1s; }
+        .load-btn:hover { opacity:.88; }
+        .load-btn:active { transform:scale(.97); }
 
-        /* RIGHT CALENDAR */
-        .calendar {
-            flex: 1;
-            background: #ffffff;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
+        /* Layout */
+        .layout { display:flex; gap:24px; padding:28px 32px; max-width:1360px; margin:0 auto; }
 
-        .calendar-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        /* Sidebar */
+        .sidebar { width:210px; flex-shrink:0; display:flex; flex-direction:column; gap:16px; }
+        .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; }
+        .card-title { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:14px; }
+        .stat-item { display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--border); }
+        .stat-item:last-child { border-bottom:none; }
+        .stat-label { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+        .stat-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+        .dot-veg { background:var(--veg); } .dot-nonveg { background:var(--nonveg); } .dot-nomeal { background:var(--nomeal); } .dot-none { background:#334155; border:1px solid #475569; }
+        .stat-count { font-size:18px; font-weight:700; }
+        .legend-item { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); padding:4px 0; }
+        .lock-note { background:var(--locked-bg); border:1px solid rgba(239,68,68,0.2); border-radius:8px; padding:12px; font-size:12px; color:#fca5a5; line-height:1.6; }
 
-        .calendar-header h2 {
-            margin: 0;
-        }
+        /* Main */
+        .main { flex:1; display:flex; flex-direction:column; gap:18px; min-width:0; }
 
-        .week {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            margin-top: 20px;
-        }
+        /* Nav */
+        .period-nav { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 18px; }
+        .period-title { font-size:16px; font-weight:600; }
+        .period-sub { font-size:13px; color:var(--muted); margin-top:2px; }
+        .nav-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:8px; width:34px; height:34px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:background .2s,border-color .2s; }
+        .nav-btn:hover { background:var(--accent); border-color:var(--accent); }
 
-        .day-card {
-            background: #f9fafb;
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
-        }
+        /* Week grid */
+        .week-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+        .day-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 14px; display:flex; flex-direction:column; gap:10px; transition:border-color .2s,box-shadow .2s; position:relative; overflow:hidden; }
+        .day-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--border); transition:background .3s; }
+        .day-card.meal-veg::before     { background:var(--veg); }
+        .day-card.meal-non_veg::before { background:var(--nonveg); }
+        .day-card.meal-no_meal::before { background:var(--nomeal); }
+        .day-card.locked { opacity:.6; }
+        .day-card:hover:not(.locked) { border-color:rgba(108,99,255,.4); box-shadow:0 0 0 1px rgba(108,99,255,.1); }
+        .day-name  { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
+        .day-date  { font-size:22px; font-weight:700; letter-spacing:-.5px; }
+        .day-month { font-size:12px; color:var(--muted); margin-top:-6px; }
+        .day-badge { font-size:11px; font-weight:600; padding:3px 8px; border-radius:20px; display:inline-flex; align-items:center; gap:4px; width:fit-content; }
+        .badge-veg     { background:var(--veg-bg);    color:var(--veg);    }
+        .badge-non_veg { background:var(--nonveg-bg); color:var(--nonveg); }
+        .badge-no_meal { background:var(--nomeal-bg); color:var(--muted);  }
+        .badge-none    { background:#1e2235;           color:var(--muted);  }
+        .badge-locked  { background:var(--locked-bg); color:#fca5a5;       }
+        .meal-select { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; font-family:'Inter',sans-serif; padding:8px 28px 8px 10px; width:100%; outline:none; cursor:pointer; transition:border-color .2s; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237b80a0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+        .meal-select:focus { border-color:var(--accent); }
+        .meal-select:disabled { cursor:not-allowed; opacity:.4; }
 
-        .day-card h4 {
-            margin: 0;
-            font-size: 14px;
-        }
+        /* Month grid — weekdays only (5 columns) */
+        .month-grid { display:flex; flex-direction:column; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+        .month-day-headers { display:grid; grid-template-columns:repeat(5,1fr); background:var(--surface2); border-bottom:1px solid var(--border); }
+        .month-day-header { text-align:center; padding:10px 4px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
+        .month-weeks { display:flex; flex-direction:column; }
+        .month-week-row { display:grid; grid-template-columns:repeat(5,1fr); border-bottom:1px solid var(--border); }
+        .month-week-row:last-child { border-bottom:none; }
+        .month-cell { border-right:1px solid var(--border); padding:8px; min-height:82px; display:flex; flex-direction:column; gap:6px; transition:background .15s; }
+        .month-cell:last-child { border-right:none; }
+        .month-cell.empty  { background:var(--bg); }
+        .month-cell.is-today { background:var(--today); }
+        .month-cell.locked   { opacity:.55; }
+        .month-cell:not(.empty):not(.locked):hover { background:var(--surface3); cursor:pointer; }
+        .month-cell-date { font-size:13px; font-weight:600; color:var(--muted); display:flex; align-items:center; justify-content:space-between; }
+        .month-cell.is-today .month-cell-date > span:first-child { background:var(--accent); color:#fff; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; }
+        .month-lock-icon { font-size:10px; color:#fca5a5; }
 
-        .day-card span {
-            font-size: 12px;
-            color: #777;
-        }
+        /* Meal toggle buttons (V / NV / NM) */
+        .meal-toggles { display:flex; gap:3px; }
+        .mtoggle { flex:1; border:1px solid var(--border2); background:var(--surface3); color:var(--muted); font-size:10px; font-weight:700; font-family:'Inter',sans-serif; border-radius:5px; padding:4px 2px; cursor:pointer; text-align:center; transition:background .15s,color .15s,border-color .15s; }
+        .mtoggle:disabled { pointer-events:none; opacity:.3; }
+        .mtoggle.active-veg     { background:var(--veg-bg);    color:var(--veg);    border-color:var(--veg);    }
+        .mtoggle.active-non_veg { background:var(--nonveg-bg); color:var(--nonveg); border-color:var(--nonveg); }
+        .mtoggle.active-no_meal { background:var(--nomeal-bg); color:var(--muted);  border-color:var(--nomeal); }
+        .mtoggle:hover:not(:disabled):not(.active-veg):not(.active-non_veg):not(.active-no_meal) { background:var(--surface2); color:var(--text); }
 
-        .day-card select {
-            margin-top: 10px;
-            width: 100%;
-            padding: 6px;
-        }
+        /* Bulk bar */
+        .month-bulk-bar { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .bulk-label { font-size:13px; color:var(--muted); font-weight:500; }
+        .bulk-btn { border:none; border-radius:7px; font-size:12px; font-weight:700; font-family:'Inter',sans-serif; padding:6px 14px; cursor:pointer; transition:opacity .2s,transform .1s; }
+        .bulk-btn:active { transform:scale(.96); }
+        .bulk-btn:hover  { opacity:.85; }
+        .bulk-veg    { background:var(--veg-bg);    color:var(--veg);    }
+        .bulk-nonveg { background:var(--nonveg-bg); color:var(--nonveg); }
+        .bulk-nomeal { background:var(--nomeal-bg); color:var(--muted);  }
+        .bulk-clear  { background:var(--surface3);  color:var(--muted);  }
 
-        .actions {
-            margin-top: 20px;
-            text-align: right;
-        }
+        /* Actions bar */
+        .actions-bar { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 18px; }
+        .actions-info { font-size:13px; color:var(--muted); }
+        .save-btn { background:var(--accent); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; font-family:'Inter',sans-serif; padding:10px 28px; cursor:pointer; transition:opacity .2s,transform .1s,box-shadow .2s; box-shadow:0 4px 16px var(--accent-glow); }
+        .save-btn:hover  { opacity:.88; }
+        .save-btn:active { transform:scale(.97); }
+        .save-btn:disabled { opacity:.35; cursor:not-allowed; transform:none; box-shadow:none; }
 
-        .save-btn {
-            padding: 8px 20px;
-            border-radius: 6px;
-            border: none;
-            background: #ccc;
-            color: #666;
-            cursor: not-allowed;
-        }
+        /* Empty & spinner */
+        .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+        .empty-state .icon { font-size:48px; margin-bottom:16px; }
+        .spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; margin:40px auto; }
+        @keyframes spin { to { transform:rotate(360deg); } }
 
-        .save-btn.active {
-            background: #2ecc71;
-            color: #fff;
-            cursor: pointer;
-        }
+        /* Toast */
+        #toast-container { position:fixed; bottom:28px; right:28px; display:flex; flex-direction:column; gap:10px; z-index:999; }
+        .toast { padding:12px 20px; border-radius:10px; font-size:14px; font-weight:500; min-width:250px; box-shadow:var(--shadow); animation:slideIn .3s ease; }
+        .toast.success { background:#166534; border:1px solid rgba(34,197,94,.3); color:#86efac; }
+        .toast.error   { background:#7f1d1d; border:1px solid rgba(239,68,68,.3);  color:#fca5a5; }
+        @keyframes slideIn { from{transform:translateX(60px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+        @media(max-width:960px){ .layout{flex-direction:column;padding:16px} .sidebar{width:100%;flex-direction:row;flex-wrap:wrap} .week-grid{grid-template-columns:repeat(3,1fr)} }
+        @media(max-width:620px){ .week-grid{grid-template-columns:1fr 1fr} .header{padding:0 14px;gap:10px} }
     </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
 </head>
-
 <body>
 
-<div class="page">
-
-    <!-- LEFT: DASHBOARD -->
-    <div class="dashboard">
-        <h2>Dashboard</h2>
-
-        <div class="stat">
-            <strong>5</strong> Days
+<header class="header">
+    <div style="display:flex;align-items:center;gap:20px">
+        <div class="header-logo"><span>🍽️</span><span>Canteen Planner</span></div>
+        <a href="/admin" style="font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid var(--border);transition:color .2s,background .2s" onmouseover="this.style.color='var(--text)';this.style.background='var(--surface2)'" onmouseout="this.style.color='var(--muted)';this.style.background='transparent'">Admin →</a>
+    </div>
+    <div class="header-right">
+        <button id="themeToggleBtn" class="nav-btn" onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;font-size:14px;margin-right:10px" title="Toggle Light/Dark Mode">
+            <span id="themeIcon">☀️</span>
+        </button>
+        <div class="view-toggle">
+            <button class="toggle-btn active" id="btnWeek"  onclick="setView('week')">Week</button>
+            <button class="toggle-btn"         id="btnMonth" onclick="setView('month')">Month</button>
         </div>
-        <div class="stat">
-            <strong>2</strong> Veg
-        </div>
-        <div class="stat">
-            <strong>2</strong> Non-Veg
-        </div>
-        <div class="stat">
-            <strong>1</strong> No Choice
+        <div class="employee-control">
+            <label for="employeeId">Emp ID</label>
+            <input id="employeeId" type="number" min="1" class="employee-input" placeholder="e.g. 1" value="1"/>
+            <button class="load-btn" onclick="loadCurrent()">Load</button>
         </div>
     </div>
+</header>
 
-    <!-- RIGHT: CURRENT WEEK -->
-    <div class="calendar">
+<div class="layout">
+    <aside class="sidebar">
+        <div class="card">
+            <div class="card-title" id="statLabel">This Week</div>
+            <div class="stat-item"><span class="stat-label"><span class="stat-dot dot-veg"></span>Veg</span><span class="stat-count" id="stat-veg">—</span></div>
+            <div class="stat-item"><span class="stat-label"><span class="stat-dot dot-nonveg"></span>Non-Veg</span><span class="stat-count" id="stat-nonveg">—</span></div>
+            <div class="stat-item"><span class="stat-label"><span class="stat-dot dot-nomeal"></span>No Meal</span><span class="stat-count" id="stat-nomeal">—</span></div>
+            <div class="stat-item"><span class="stat-label"><span class="stat-dot dot-none"></span>Unset</span><span class="stat-count" id="stat-none">—</span></div>
+        </div>
+        <div class="card">
+            <div class="card-title">Legend</div>
+            <div class="legend-item"><span class="stat-dot dot-veg"></span>Vegetarian</div>
+            <div class="legend-item"><span class="stat-dot dot-nonveg"></span>Non-Vegetarian</div>
+            <div class="legend-item"><span class="stat-dot dot-nomeal"></span>No Meal</div>
+            <div class="legend-item"><span style="font-size:11px">🔒</span>Locked (≤7 days)</div>
+        </div>
+        <div class="lock-note">🔒 Meals must be selected <strong>more than 7 days</strong> in advance. Locked days cannot be changed.</div>
+    </aside>
 
-        <div class="calendar-header">
-            <button>&lt; Prev</button>
-            <h2>Current Week</h2>
-            <button>Next &gt;</button>
+    <main class="main">
+        <div class="period-nav">
+            <button class="nav-btn" onclick="changePeriod(-1)">&#8249;</button>
+            <div><div class="period-title" id="periodTitle">—</div><div class="period-sub" id="periodSub"></div></div>
+            <button class="nav-btn" onclick="changePeriod(1)">&#8250;</button>
         </div>
 
-        <div class="week">
-
-            <!-- MONDAY -->
-            <div class="day-card">
-                <h4>Monday</h4>
-                <span>05 Feb</span>
-                <select>
-                    <option>NO_CHOICE</option>
-                    <option>VEG</option>
-                    <option>NON_VEG</option>
-                    <option>NO_MEAL</option>
-                </select>
-            </div>
-
-            <!-- TUESDAY -->
-            <div class="day-card">
-                <h4>Tuesday</h4>
-                <span>06 Feb</span>
-                <select>
-                    <option>NO_CHOICE</option>
-                    <option>VEG</option>
-                    <option>NON_VEG</option>
-                    <option>NO_MEAL</option>
-                </select>
-            </div>
-
-            <!-- WEDNESDAY -->
-            <div class="day-card">
-                <h4>Wednesday</h4>
-                <span>07 Feb</span>
-                <select>
-                    <option>NO_CHOICE</option>
-                    <option>VEG</option>
-                    <option>NON_VEG</option>
-                    <option>NO_MEAL</option>
-                </select>
-            </div>
-
-            <!-- THURSDAY -->
-            <div class="day-card">
-                <h4>Thursday</h4>
-                <span>08 Feb</span>
-                <select>
-                    <option>NO_CHOICE</option>
-                    <option>VEG</option>
-                    <option>NON_VEG</option>
-                    <option>NO_MEAL</option>
-                </select>
-            </div>
-
-            <!-- FRIDAY -->
-            <div class="day-card">
-                <h4>Friday</h4>
-                <span>09 Feb</span>
-                <select>
-                    <option>NO_CHOICE</option>
-                    <option>VEG</option>
-                    <option>NON_VEG</option>
-                    <option>NO_MEAL</option>
-                </select>
-            </div>
-
+        <!-- Bulk bar — month view only -->
+        <div class="month-bulk-bar" id="bulkBar" style="display:none">
+            <span class="bulk-label">Set all unlocked weekdays:</span>
+            <button class="bulk-btn bulk-veg"    onclick="bulkSetMonth('VEG')">🥦 All Veg</button>
+            <button class="bulk-btn bulk-nonveg" onclick="bulkSetMonth('NON_VEG')">🍗 All Non-Veg</button>
+            <button class="bulk-btn bulk-nomeal" onclick="bulkSetMonth('NO_MEAL')">🚫 All No Meal</button>
+            <button class="bulk-btn bulk-clear"  onclick="bulkSetMonth('NONE')">✕ Clear All</button>
         </div>
 
-        <div class="actions">
-            <button class="save-btn">Save</button>
+        <div id="viewContent">
+            <div class="empty-state"><div class="icon">👆</div><p>Enter your Employee ID and click <strong>Load</strong> to see your meal plan.</p></div>
         </div>
 
-    </div>
-
+        <div class="actions-bar">
+            <span class="actions-info" id="actionsInfo">Select your meals, then save.</span>
+            <button class="save-btn" id="saveBtn" onclick="saveSelections()" disabled>Save Changes</button>
+        </div>
+    </main>
 </div>
 
+<div id="toast-container"></div>
+
+<script>
+/* ── State ────────────────────────────────────────────────────────── */
+const WEEKDAYS    = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const DAY_HEADERS = ['Mon','Tue','Wed','Thu','Fri'];
+const MON_SHORT   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MON_LONG    = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+let currentView    = 'week';
+let weekOffset     = 0;
+let monthOffset    = 0;
+let periodData     = {};   // Map<dateStr, mealType>
+let pendingChanges = false;
+
+/* ── Theme ────────────────────────────────────────────────────────── */
+function updateThemeIcon() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
+}
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon();
+}
+updateThemeIcon();
+
+/* ── Date helpers ─────────────────────────────────────────────────── */
+function isoDate(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function addDays(d, n)  { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
+function todayMidnight(){ const t = new Date(); t.setHours(0,0,0,0); return t; }
+function isWeekend(dow) { return dow === 0 || dow === 6; }
+
+function isLocked(dateStr) {
+    return new Date(dateStr+'T00:00:00') <= addDays(todayMidnight(), 7);
+}
+function isToday(dateStr) { return isoDate(todayMidnight()) === dateStr; }
+
+function getWeekMonday(offset) {
+    const t   = new Date();
+    const dow = t.getDay();
+    return new Date(t.getFullYear(), t.getMonth(), t.getDate() - dow + (dow===0?-6:1) + offset*7);
+}
+function getMonthBounds(offset) {
+    const t = new Date();
+    return {
+        first: new Date(t.getFullYear(), t.getMonth()+offset, 1),
+        last:  new Date(t.getFullYear(), t.getMonth()+offset+1, 0)
+    };
+}
+
+/* ── View toggle ──────────────────────────────────────────────────── */
+function setView(view) {
+    currentView = view;
+    document.getElementById('btnWeek').classList.toggle('active',  view==='week');
+    document.getElementById('btnMonth').classList.toggle('active', view==='month');
+    document.getElementById('bulkBar').style.display = view==='month' ? 'flex' : 'none';
+    document.getElementById('statLabel').textContent  = view==='week' ? 'This Week' : 'This Month';
+    weekOffset = monthOffset = 0;
+    periodData = {};
+    pendingChanges = false;
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('viewContent').innerHTML =
+        '<div class="empty-state"><div class="icon">👆</div><p>Click <strong>Load</strong> to see your meal plan.</p></div>';
+    updatePeriodHeader();
+}
+
+function changePeriod(dir) {
+    if (currentView==='week') weekOffset  += dir;
+    else                      monthOffset += dir;
+    loadCurrent();
+}
+
+/* ── Period header ────────────────────────────────────────────────── */
+function updatePeriodHeader() {
+    const t = document.getElementById('periodTitle');
+    const s = document.getElementById('periodSub');
+    if (currentView === 'week') {
+        const mon = getWeekMonday(weekOffset), fri = addDays(mon, 4);
+        t.textContent = weekOffset===0 ? 'Current Week'
+            : weekOffset<0 ? `${Math.abs(weekOffset)} Week${Math.abs(weekOffset)>1?'s':''} Ago`
+            : `${weekOffset} Week${weekOffset>1?'s':''} Ahead`;
+        s.textContent = mon.getMonth()===fri.getMonth()
+            ? `${mon.getDate()} – ${fri.getDate()} ${MON_SHORT[fri.getMonth()]} ${fri.getFullYear()}`
+            : `${mon.getDate()} ${MON_SHORT[mon.getMonth()]} – ${fri.getDate()} ${MON_SHORT[fri.getMonth()]} ${fri.getFullYear()}`;
+    } else {
+        const { first } = getMonthBounds(monthOffset);
+        t.textContent = monthOffset===0 ? 'Current Month'
+            : monthOffset<0 ? `${Math.abs(monthOffset)} Month${Math.abs(monthOffset)>1?'s':''} Ago`
+            : `${monthOffset} Month${monthOffset>1?'s':''} Ahead`;
+        s.textContent = `${MON_LONG[first.getMonth()]} ${first.getFullYear()}`;
+    }
+}
+
+/* ── Load data ────────────────────────────────────────────────────── */
+async function loadCurrent() {
+    const empId = document.getElementById('employeeId').value.trim();
+    if (!empId || empId<1) { showToast('Please enter a valid Employee ID.','error'); return; }
+    updatePeriodHeader();
+
+    let fromDate, toDate;
+    if (currentView==='week') {
+        const mon = getWeekMonday(weekOffset);
+        fromDate  = isoDate(mon);
+        toDate    = isoDate(addDays(mon,4));
+    } else {
+        const { first, last } = getMonthBounds(monthOffset);
+        fromDate = isoDate(first); toDate = isoDate(last);
+    }
+
+    document.getElementById('viewContent').innerHTML = '<div style="text-align:center;padding:50px"><div class="spinner"></div></div>';
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('actionsInfo').textContent = 'Loading…';
+
+    try {
+        const res = await fetch(`/api/meals/range?employeeId=${empId}&fromDate=${fromDate}&toDate=${toDate}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const list = await res.json();
+        periodData = {};
+        list.forEach(item => { periodData[item.date] = item.mealType || 'NONE'; });
+    } catch (e) {
+        document.getElementById('viewContent').innerHTML =
+            '<div class="empty-state"><div class="icon">⚠️</div><p>Could not load data. Is the server running?</p></div>';
+        showToast('Failed to load meal data.','error');
+        return;
+    }
+
+    currentView==='week' ? renderWeek() : renderMonth();
+    pendingChanges = false;
+    document.getElementById('saveBtn').disabled = true;
+    document.getElementById('actionsInfo').textContent = 'Make your selections, then click Save.';
+    updateStats();
+}
+
+/* ── Week view ────────────────────────────────────────────────────── */
+function renderWeek() {
+    const mon  = getWeekMonday(weekOffset);
+    const grid = document.createElement('div');
+    grid.className = 'week-grid';
+
+    for (let i=0; i<5; i++) {
+        const date    = addDays(mon, i);
+        const dateStr = isoDate(date);
+        const mt      = periodData[dateStr] || 'NONE';
+        const locked  = isLocked(dateStr);
+
+        const card = document.createElement('div');
+        card.className = `day-card meal-${mt.toLowerCase()}${locked?' locked':''}`;
+        card.id = `wcard-${dateStr}`;
+        card.innerHTML = `
+            <div class="day-name">${WEEKDAYS[i]}</div>
+            <div class="day-date">${date.getDate()}</div>
+            <div class="day-month">${MON_SHORT[date.getMonth()]}</div>
+            ${locked
+                ? `<span class="day-badge badge-locked">🔒 Locked</span>`
+                : `<span class="day-badge badge-${mt.toLowerCase()}" id="wb-${dateStr}">${badgeLabel(mt)}</span>`}
+            <select class="meal-select" id="ws-${dateStr}" data-date="${dateStr}"
+                    onchange="onWeekChange('${dateStr}',this.value)" ${locked?'disabled':''}>
+                <option value="NONE"    ${mt==='NONE'   ?'selected':''}>— Not Set —</option>
+                <option value="VEG"     ${mt==='VEG'    ?'selected':''}>🥦 Vegetarian</option>
+                <option value="NON_VEG" ${mt==='NON_VEG'?'selected':''}>🍗 Non-Vegetarian</option>
+                <option value="NO_MEAL" ${mt==='NO_MEAL'?'selected':''}>🚫 No Meal</option>
+            </select>`;
+        grid.appendChild(card);
+    }
+
+    const content = document.getElementById('viewContent');
+    content.innerHTML = '';
+    content.appendChild(grid);
+}
+
+function onWeekChange(dateStr, value) {
+    periodData[dateStr] = value;
+    const card  = document.getElementById(`wcard-${dateStr}`);
+    const badge = document.getElementById(`wb-${dateStr}`);
+    card.className = `day-card meal-${value.toLowerCase()}`;
+    if (badge) { badge.className = `day-badge badge-${value.toLowerCase()}`; badge.innerHTML = badgeLabel(value); }
+    markDirty();
+}
+
+/* ── Month view (weekdays only) ───────────────────────────────────── */
+function renderMonth() {
+    const { first, last } = getMonthBounds(monthOffset);
+    const content = document.getElementById('viewContent');
+    content.innerHTML = '';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'month-grid';
+
+    // Day headers Mon–Fri
+    const headerRow = document.createElement('div');
+    headerRow.className = 'month-day-headers';
+    DAY_HEADERS.forEach(h => {
+        const cell = document.createElement('div');
+        cell.className = 'month-day-header';
+        cell.textContent = h;
+        headerRow.appendChild(cell);
+    });
+    wrapper.appendChild(headerRow);
+
+    // Collect weekday dates in the month
+    const weekdays = [];
+    for (let d = new Date(first); d <= last; d.setDate(d.getDate()+1)) {
+        if (!isWeekend(new Date(d).getDay())) weekdays.push(isoDate(new Date(d)));
+    }
+
+    if (weekdays.length) {
+        // Starting column (0=Mon … 4=Fri) of the first weekday
+        const firstCol = (new Date(weekdays[0]+'T00:00:00').getDay() + 6) % 7;
+        const slots    = Array(firstCol).fill(null).concat(weekdays);
+        while (slots.length % 5 !== 0) slots.push(null);
+
+        const weeksEl = document.createElement('div');
+        weeksEl.className = 'month-weeks';
+
+        for (let i=0; i<slots.length; i+=5) {
+            const row = document.createElement('div');
+            row.className = 'month-week-row';
+
+            for (let col=0; col<5; col++) {
+                const dateStr = slots[i+col];
+                const cell    = document.createElement('div');
+
+                if (!dateStr) {
+                    cell.className = 'month-cell empty';
+                } else {
+                    const locked = isLocked(dateStr);
+                    const today  = isToday(dateStr);
+                    const mt     = periodData[dateStr] || 'NONE';
+                    const dayNum = new Date(dateStr+'T00:00:00').getDate();
+
+                    cell.className = 'month-cell' + (today?' is-today':'') + (locked?' locked':'');
+                    cell.id = `mc-${dateStr}`;
+                    cell.innerHTML = `
+                        <div class="month-cell-date">
+                            <span>${dayNum}</span>
+                            ${locked ? '<span class="month-lock-icon">🔒</span>' : ''}
+                        </div>
+                        <div class="meal-toggles">
+                            <button class="mtoggle ${mt==='VEG'    ?'active-veg':''}"     data-date="${dateStr}" data-type="VEG"     onclick="onMonthToggle('${dateStr}','VEG')"     ${locked?'disabled':''}>V</button>
+                            <button class="mtoggle ${mt==='NON_VEG'?'active-non_veg':''}" data-date="${dateStr}" data-type="NON_VEG" onclick="onMonthToggle('${dateStr}','NON_VEG')" ${locked?'disabled':''}>NV</button>
+                            <button class="mtoggle ${mt==='NO_MEAL'?'active-no_meal':''}" data-date="${dateStr}" data-type="NO_MEAL" onclick="onMonthToggle('${dateStr}','NO_MEAL')" ${locked?'disabled':''}>NM</button>
+                        </div>`;
+                }
+                row.appendChild(cell);
+            }
+            weeksEl.appendChild(row);
+        }
+        wrapper.appendChild(weeksEl);
+    }
+
+    content.appendChild(wrapper);
+}
+
+function onMonthToggle(dateStr, type) {
+    const current = periodData[dateStr] || 'NONE';
+    const newVal  = (current===type) ? 'NONE' : type;
+    periodData[dateStr] = newVal;
+
+    const cell = document.getElementById(`mc-${dateStr}`);
+    if (!cell) return;
+    cell.querySelectorAll('.mtoggle').forEach(btn => {
+        const t = btn.dataset.type;
+        btn.className = 'mtoggle' + (newVal===t ? ` active-${t.toLowerCase()}` : '');
+    });
+    markDirty();
+}
+
+/* ── Bulk set ─────────────────────────────────────────────────────── */
+function bulkSetMonth(type) {
+    const { first, last } = getMonthBounds(monthOffset);
+    let changed = false;
+    for (let d = new Date(first); d<=last; d.setDate(d.getDate()+1)) {
+        const dateStr = isoDate(new Date(d));
+        if (isWeekend(new Date(d).getDay()) || isLocked(dateStr)) continue;
+        periodData[dateStr] = type;
+        const cell = document.getElementById(`mc-${dateStr}`);
+        if (cell) {
+            cell.querySelectorAll('.mtoggle').forEach(btn => {
+                const t = btn.dataset.type;
+                btn.className = 'mtoggle' + (type===t ? ` active-${t.toLowerCase()}` : '');
+            });
+        }
+        changed = true;
+    }
+    if (changed) markDirty();
+    updateStats();
+}
+
+/* ── Stats ────────────────────────────────────────────────────────── */
+function updateStats() {
+    const counts = { VEG:0, NON_VEG:0, NO_MEAL:0, NONE:0 };
+
+    if (currentView==='week') {
+        const mon = getWeekMonday(weekOffset);
+        for (let i=0; i<5; i++) {
+            const mt = periodData[isoDate(addDays(mon,i))] || 'NONE';
+            if (counts[mt] !== undefined) counts[mt]++;
+        }
+    } else {
+        const { first, last } = getMonthBounds(monthOffset);
+        for (let d=new Date(first); d<=last; d.setDate(d.getDate()+1)) {
+            if (isWeekend(new Date(d).getDay())) continue;
+            const mt = periodData[isoDate(new Date(d))] || 'NONE';
+            if (counts[mt] !== undefined) counts[mt]++;
+        }
+    }
+
+    document.getElementById('stat-veg').textContent    = counts.VEG;
+    document.getElementById('stat-nonveg').textContent = counts.NON_VEG;
+    document.getElementById('stat-nomeal').textContent = counts.NO_MEAL;
+    document.getElementById('stat-none').textContent   = counts.NONE;
+}
+
+function markDirty() {
+    pendingChanges = true;
+    document.getElementById('saveBtn').disabled = false;
+    document.getElementById('actionsInfo').textContent = 'You have unsaved changes.';
+    updateStats();
+}
+
+/* ── Save ─────────────────────────────────────────────────────────── */
+async function saveSelections() {
+    const empId   = document.getElementById('employeeId').value.trim();
+    const saveBtn = document.getElementById('saveBtn');
+
+    const payload = Object.entries(periodData)
+        .filter(([dateStr, mt]) => {
+            if (mt==='NONE') return false;
+            if (isLocked(dateStr)) return false;
+            if (isWeekend(new Date(dateStr+'T00:00:00').getDay())) return false;
+            return true;
+        })
+        .map(([dateStr, mt]) => ({ employeeId:parseInt(empId), mealDate:dateStr, mealType:mt }));
+
+    if (!payload.length) { showToast('No valid selections to save.','error'); return; }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+
+    try {
+        const res = await fetch('/api/meals/bulk', {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(()=>({}));
+            throw new Error(err.message||err.error||`HTTP ${res.status}`);
+        }
+        showToast(`✅ ${payload.length} meal${payload.length>1?'s':''} saved!`,'success');
+        pendingChanges = false;
+        document.getElementById('actionsInfo').textContent = 'All changes saved.';
+    } catch(e) {
+        showToast(`Error: ${e.message}`,'error');
+        saveBtn.disabled = false;
+    } finally {
+        saveBtn.textContent = 'Save Changes';
+        saveBtn.disabled    = !pendingChanges;
+    }
+}
+
+/* ── Helpers ──────────────────────────────────────────────────────── */
+function badgeLabel(mt) {
+    return {VEG:'🥦 Veg',NON_VEG:'🍗 Non-Veg',NO_MEAL:'🚫 No Meal',NONE:'— Unset'}[mt]||mt;
+}
+
+function showToast(msg, type='success') {
+    const c = document.getElementById('toast-container');
+    const t = document.createElement('div');
+    t.className = `toast ${type}`; t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(()=>t.remove(), 4000);
+}
+
+/* ── Init ─────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+    updatePeriodHeader();
+    document.getElementById('employeeId').addEventListener('keydown', e => {
+        if (e.key==='Enter') loadCurrent();
+    });
+});
+</script>
 </body>
 </html>
