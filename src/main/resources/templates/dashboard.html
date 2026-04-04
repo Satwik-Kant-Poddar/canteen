@@ -11,14 +11,14 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg:          #0f1117;
-            --surface:     #1a1d27;
-            --surface2:    #22263a;
-            --surface3:    #2a2f45;
-            --border:      rgba(255,255,255,0.07);
-            --border2:     rgba(255,255,255,0.12);
-            --text:        #e8eaf0;
-            --muted:       #7b80a0;
+            --bg:          #000000;
+            --surface:     #0c0c0c;
+            --surface2:    #171717;
+            --surface3:    #222222;
+            --border:      rgba(255,255,255,0.05);
+            --border2:     rgba(255,255,255,0.10);
+            --text:        #ededed;
+            --muted:       #8a8a8a;
             --accent:      #6c63ff;
             --accent-glow: rgba(108,99,255,0.25);
             --veg:         #22c55e;
@@ -201,20 +201,20 @@
 <header class="header">
     <div style="display:flex;align-items:center;gap:20px">
         <div class="header-logo"><span>🍽️</span><span>Canteen Planner</span></div>
-        <a href="/admin" style="font-size:13px;font-weight:500;color:var(--muted);text-decoration:none;padding:6px 14px;border-radius:8px;border:1px solid var(--border);transition:color .2s,background .2s" onmouseover="this.style.color='var(--text)';this.style.background='var(--surface2)'" onmouseout="this.style.color='var(--muted)';this.style.background='transparent'">Admin →</a>
     </div>
     <div class="header-right">
+        <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)">
+            <span>👤</span>
+            <span th:text="${user.username}">employee</span>
+            <span style="background:var(--surface2);padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600">ID: <span th:text="${user.employeeId}">1</span></span>
+        </div>
+        <a href="/logout" style="font-size:12px;font-weight:500;color:var(--muted);text-decoration:none;padding:5px 12px;border-radius:7px;border:1px solid var(--border);transition:color .2s,background .2s" onmouseover="this.style.color='var(--text)';this.style.background='var(--surface2)'" onmouseout="this.style.color='var(--muted)';this.style.background='transparent'">Logout</a>
         <button id="themeToggleBtn" class="nav-btn" onclick="toggleTheme()" style="width:32px;height:32px;border-radius:50%;font-size:14px;margin-right:10px" title="Toggle Light/Dark Mode">
             <span id="themeIcon">☀️</span>
         </button>
         <div class="view-toggle">
             <button class="toggle-btn active" id="btnWeek"  onclick="setView('week')">Week</button>
             <button class="toggle-btn"         id="btnMonth" onclick="setView('month')">Month</button>
-        </div>
-        <div class="employee-control">
-            <label for="employeeId">Emp ID</label>
-            <input id="employeeId" type="number" min="1" class="employee-input" placeholder="e.g. 1" value="1"/>
-            <button class="load-btn" onclick="loadCurrent()">Load</button>
         </div>
     </div>
 </header>
@@ -267,7 +267,10 @@
 
 <div id="toast-container"></div>
 
-<script>
+<script th:inline="javascript">
+/* ── Logged-in user ──────────────────────────────────────────────── */
+const LOGGED_IN_EMP_ID = /*[[${user.employeeId}]]*/ 1;
+
 /* ── State ────────────────────────────────────────────────────────── */
 const WEEKDAYS    = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 const DAY_HEADERS = ['Mon','Tue','Wed','Thu','Fri'];
@@ -365,8 +368,7 @@ function updatePeriodHeader() {
 
 /* ── Load data ────────────────────────────────────────────────────── */
 async function loadCurrent() {
-    const empId = document.getElementById('employeeId').value.trim();
-    if (!empId || empId<1) { showToast('Please enter a valid Employee ID.','error'); return; }
+    const empId = LOGGED_IN_EMP_ID;
     updatePeriodHeader();
 
     let fromDate, toDate;
@@ -592,7 +594,7 @@ function markDirty() {
 
 /* ── Save ─────────────────────────────────────────────────────────── */
 async function saveSelections() {
-    const empId   = document.getElementById('employeeId').value.trim();
+    const empId   = LOGGED_IN_EMP_ID;
     const saveBtn = document.getElementById('saveBtn');
 
     const payload = Object.entries(periodData)
@@ -645,9 +647,7 @@ function showToast(msg, type='success') {
 /* ── Init ─────────────────────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
     updatePeriodHeader();
-    document.getElementById('employeeId').addEventListener('keydown', e => {
-        if (e.key==='Enter') loadCurrent();
-    });
+    loadCurrent();
 });
 </script>
 </body>

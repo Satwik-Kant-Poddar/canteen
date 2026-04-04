@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Canteen Meal Planner — Login to manage your meals.">
+    <title>Login — Canteen Planner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:          #000000;
+            --surface:     #0c0c0c;
+            --surface2:    #171717;
+            --surface3:    #222222;
+            --border:      rgba(255,255,255,0.05);
+            --border2:     rgba(255,255,255,0.10);
+            --text:        #ededed;
+            --muted:       #8a8a8a;
+            --accent:      #6c63ff;
+            --accent-glow: rgba(108,99,255,0.25);
+            --accent-soft: rgba(108,99,255,0.12);
+            --error:       #ef4444;
+            --error-bg:    rgba(239,68,68,0.12);
+            --radius:      14px;
+            --shadow:      0 4px 24px rgba(0,0,0,0.4);
+        }
+
+        [data-theme="light"] {
+            --bg:          #f4f6f8;
+            --surface:     #ffffff;
+            --surface2:    #f0f2f5;
+            --surface3:    #e4e7eb;
+            --border:      rgba(0,0,0,0.08);
+            --border2:     rgba(0,0,0,0.15);
+            --text:        #1e293b;
+            --muted:       #64748b;
+            --accent:      #4f46e5;
+            --accent-glow: rgba(79,70,229,0.2);
+            --accent-soft: rgba(79,70,229,0.08);
+            --error:       #dc2626;
+            --error-bg:    rgba(220,38,38,0.08);
+            --shadow:      0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s, color 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 12s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #6c63ff; top: -100px; left: -100px; animation-delay: 0s; }
+        .orb-2 { width: 350px; height: 350px; background: #f97316; bottom: -80px; right: -80px; animation-delay: -4s; }
+        .orb-3 { width: 250px; height: 250px; background: #22c55e; top: 50%; left: 60%; animation-delay: -8s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33%      { transform: translate(30px, -20px) scale(1.05); }
+            66%      { transform: translate(-20px, 15px) scale(0.95); }
+        }
+
+        [data-theme="light"] .orb { opacity: 0.15; }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 10;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s, border-color 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .theme-toggle:hover { border-color: var(--accent); }
+
+        /* Login card */
+        .login-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            padding: 40px 36px 36px;
+            box-shadow: var(--shadow), 0 0 80px rgba(108,99,255,0.06);
+            backdrop-filter: blur(12px);
+            animation: cardIn 0.5s ease;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(24px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .login-logo .emoji { font-size: 40px; margin-bottom: 8px; display: block; }
+        .login-logo h1 {
+            font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+        }
+        .login-logo p {
+            font-size: 13px; color: var(--muted); margin-top: 6px;
+        }
+
+        /* Role tabs */
+        .role-tabs {
+            display: flex;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 3px;
+            margin-bottom: 24px;
+            gap: 2px;
+        }
+        .role-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            border-radius: 9px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+        .role-tab.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+        .role-tab:not(.active):hover {
+            background: var(--surface3);
+            color: var(--text);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 8px;
+        }
+        .form-input {
+            width: 100%;
+            background: var(--surface2);
+            border: 1px solid var(--border2);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            padding: 12px 16px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+        .form-input::placeholder {
+            color: var(--muted);
+            opacity: 0.6;
+        }
+
+        /* Login button */
+        .login-btn {
+            width: 100%;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            padding: 13px 0;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px var(--accent-glow);
+            margin-top: 6px;
+        }
+        .login-btn:hover { opacity: 0.9; }
+        .login-btn:active { transform: scale(0.98); }
+
+        /* Error message */
+        .error-msg {
+            background: var(--error-bg);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--error);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%      { transform: translateX(-6px); }
+            50%      { transform: translateX(6px); }
+            75%      { transform: translateX(-3px); }
+        }
+
+
+        @media (max-width: 480px) {
+            .login-card { margin: 16px; padding: 28px 24px 24px; }
+        }
+    </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+<body>
+
+<!-- Background orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Theme toggle -->
+<button class="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+    <span id="themeIcon">☀️</span>
+</button>
+
+<!-- Login card -->
+<div class="login-card">
+    <div class="login-logo">
+        <span class="emoji">🍽️</span>
+        <h1>Canteen Planner</h1>
+        <p>Sign in to manage your meals</p>
+    </div>
+
+    <!-- Role tabs -->
+    <div class="role-tabs">
+        <button class="role-tab active" id="tabEmployee" onclick="setRole('employee')">👤 Employee</button>
+        <button class="role-tab" id="tabAdmin" onclick="setRole('admin')">🔐 Admin</button>
+    </div>
+
+    <!-- Error message -->
+    <div class="error-msg" id="errorMsg" th:if="${error}" style="display:flex">
+        <span>⚠️</span>
+        <span th:text="${error}">Invalid credentials</span>
+    </div>
+
+    <!-- Login form -->
+    <form method="post" action="/login" id="loginForm">
+        <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input class="form-input" type="text" id="username" name="username"
+                   th:value="${lastUsername}" placeholder="e.g. john.doe" autocomplete="username" required autofocus />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input class="form-input" type="password" id="password" name="password"
+                   placeholder="Enter your password" autocomplete="current-password" required />
+        </div>
+
+        <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+    </form>
+</div>
+
+<script>
+    let selectedRole = 'employee';
+
+    function setRole(role) {
+        selectedRole = role;
+        document.getElementById('tabEmployee').classList.toggle('active', role === 'employee');
+        document.getElementById('tabAdmin').classList.toggle('active', role === 'admin');
+
+        if (role === 'admin') {
+            document.getElementById('username').placeholder = 'e.g. admin';
+        } else {
+            document.getElementById('username').placeholder = 'e.g. john.doe';
+        }
+    }
+
+    /* Theme */
+    function updateThemeIcon() {
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
+    }
+    function toggleTheme() {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'light' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        updateThemeIcon();
+    }
+    updateThemeIcon();
+</script>
+</body>
+</html>
+
