@@ -12,33 +12,32 @@
     </parent>
 
     <groupId>com.canteen</groupId>
-    <artifactId>batch-learning</artifactId>
+    <artifactId>qr-generator</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>batch-learning</name>
-    <description>Simple Spring Batch Learning Project</description>
+    <name>qr-generator</name>
+    <description>Modern Java QR Code Generator</description>
 
     <properties>
         <java.version>17</java.version>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Starter Core -->
+        <!-- Spring Boot Starter Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- Spring Batch Core Dependencies -->
+        <!-- Google ZXing for QR Code Generation -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-batch</artifactId>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.3</version>
         </dependency>
-
-        <!-- H2 Database for Spring Batch Meta-Data -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.3</version>
         </dependency>
     </dependencies>
 
