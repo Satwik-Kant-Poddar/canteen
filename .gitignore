@@ -1,0 +1,17 @@
+# Target build directories (Maven output)
+target/
+.idea/
+*.class
+# IntelliJ IDEA settings
+.idea/
+*.iws
+*.iml
+*.ipr
+# OS-specific files
+*.log
+.DS_Store
+Thumbs.db
+# Log files
+*.log
+# Sensitive environment configuration files (if any)
+.env

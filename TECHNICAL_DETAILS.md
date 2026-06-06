@@ -12,9 +12,9 @@ The application is structured as a single-instance Spring Boot microservice. The
 graph TD
     Client[Browser UI] -- 1. Submit form details / GET --> Controller[QrCodeController]
     Controller -- 2. Sanitize & Pass args --> Service[QrCodeService]
-    Service -- 3. Request Matrix creation --> ZXing[Google ZXing Library]
-    ZXing -- 4. Generate BitMatrix --> Service
-    Service -- 5. Write ARGB Image Stream --> Output[ByteArrayOutputStream]
+    Service -- 3. Request Matrix creation --> InHouse[com.canteen.qr.core.QrCode]
+    InHouse -- 4. Encode & Generate boolean[][] --> Service
+    Service -- 5. Map pixels & Draw Graphics2D --> Output[ByteArrayOutputStream]
     Output -- 6. Return raw byte[] --> Controller
     Controller -- 7. Add Cache-Control & Content-Type --> Client
     Client -- 8. Load Blob URL & Update Local History --> LocalStorage[(LocalStorage)]
@@ -25,74 +25,38 @@ graph TD
 ## 1. Backend Implementation
 
 ### Main Entrypoint: [QrCodeApplication.java](file:///Users/satwikpoddar/devlopment/java-project/canteen/src/main/java/com/canteen/qr/QrCodeApplication.java)
-A standard Spring Boot application launcher. The annotations trigger auto-configuration, component scanning, and web application startup:
-```java
-@SpringBootApplication
-public class QrCodeApplication {
-    public static void main(String[] args) {
-        SpringApplication.run(QrCodeApplication.class, args);
-    }
-}
-```
-
-### Transport Layer: [QrCodeController.java](file:///Users/satwikpoddar/devlopment/java-project/canteen/src/main/java/com/canteen/qr/controller/QrCodeController.java)
-The controller exposes the HTTP endpoint `GET /api/qr/generate`. Key design features include:
-1. **Query Parameterization**: Accepts parameters: `text`, `width`, `height`, `ecl` (Error Correction Level), `format`, `onColor` (hex code), and `offColor` (hex code).
-2. **Dimension Sanitization**: Restricts maximum/minimum heights and widths between 10px and 2000px using:
-   ```java
-   int finalWidth = Math.max(10, Math.min(width, 2000));
-   ```
-   This prevents Out-Of-Memory (OOM) heap exceptions caused by malicious client requests demanding excessively large canvas dimensions.
-3. **MIME Mapping**: Inspects the `format` parameter and assigns the correct Spring `MediaType` header (`image/png` or `image/jpeg`).
-4. **HTTP Caching**: Sets the HTTP `Cache-Control` header to `max-age=31536000, must-revalidate` (1 year). Since QR codes with the exact same inputs are idempotent, this optimizes downstream client page reloads.
+A standard Spring Boot application launcher.
 
 ### Core Processing: [QrCodeService.java](file:///Users/satwikpoddar/devlopment/java-project/canteen/src/main/java/com/canteen/qr/service/QrCodeService.java)
-The service encapsulates Google ZXing libraries to encode data, custom-style the output canvas, and serialize the binary image.
+The service utilizes our custom in-house implementation to encode data, custom-style the output canvas, and serialize the binary image using standard `java.awt.Graphics2D`.
 
-#### Step 1: Configuring Encoding Hints
-ZXing encodes using configurations set in a `Map<EncodeHintType, Object>`. We set:
-- `CHARACTER_SET` = `UTF-8` to support unicode data, emoji, and multi-language strings.
-- `MARGIN` = `1` (quiet zone sizing) to reduce unnecessary white spacing around the modules while maintaining standard-compliant scan padding.
-- `ERROR_CORRECTION` = Map parameter mapping to `ErrorCorrectionLevel` enums (`L`, `M`, `Q`, `H`).
+#### Step 1: Core Mathematical Encoding (In-House Algorithm)
+We replaced third-party dependencies with our own native implementation located in `com.canteen.qr.core`.
+The `QrCode.encodeText()` method handles the heavy lifting:
+- Converts the string to a sequence of `QrSegment` chunks (byte-mode encoding).
+- Calculates the necessary version (size) and bits.
+- Computes **Reed-Solomon Error Correction** codewords utilizing Galois Field (GF) arithmetic.
+- Assembles the raw data bit-stream.
 
-#### Step 2: The Core QR Matrix Encoding
-A `MultiFormatWriter` takes inputs and creates a `BitMatrix`. The `BitMatrix` is an internal ZXing representation containing boolean values representing the grid modules (pixels):
+#### Step 2: Matrix Placement and Masking
+The custom `QrCode` class allocates a 2D boolean array:
 ```java
-MultiFormatWriter writer = new MultiFormatWriter();
-BitMatrix bitMatrix = writer.encode(text, BarcodeFormat.QR_CODE, width, height, hints);
+public boolean getModule(int x, int y);
 ```
+It draws the Finder Patterns, Alignment Patterns, and Timing Patterns. Finally, it calculates penalty scores for all 8 standard QR mask patterns and applies the mask that scores the lowest (i.e. the most readable mask).
 
-#### Step 3: Color Translation (Hex to 32-bit ARGB Integer)
-ZXing's `MatrixToImageConfig` requires color inputs represented as standard signed 32-bit integers in **ARGB format** (`0xAARRGGBB`).
-Browsers output standard RGB hex strings (e.g. `#6366F1` or `#FFFFFF`).
-Our custom parsing algorithm `parseColor` translates these values:
+#### Step 3: Color Translation & Graphics Rendering
+Our custom parsing algorithm `parseColor` translates standard browser hex inputs (like `#6366F1`) into 32-bit ARGB integers:
 ```java
-private int parseColor(String hex, int defaultColor) {
-    if (hex == null || hex.trim().isEmpty()) {
-        return defaultColor;
-    }
-    String cleanHex = hex.trim();
-    if (cleanHex.startsWith("#")) {
-        cleanHex = cleanHex.substring(1);
-    }
-    if (cleanHex.length() == 6) {
-        // We prepend 'FF' to enforce 100% opacity (alpha)
-        return (int) Long.parseLong("FF" + cleanHex, 16);
-    } else if (cleanHex.length() == 8) {
-        return (int) Long.parseLong(cleanHex, 16);
-    }
-    return defaultColor;
-}
+int onColorArgb = parseColor(onColorHex, 0xFF000000);
 ```
-
-#### Step 4: Rendering and Binary Stream Extraction
-We feed the `BitMatrix`, output format, color configuration, and a `ByteArrayOutputStream` into `MatrixToImageWriter`:
+The boolean matrix is scaled and mapped pixel-by-pixel onto a `java.awt.image.BufferedImage` using the powerful Java 2D API:
 ```java
-ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-MatrixToImageConfig config = new MatrixToImageConfig(onColor, offColor);
-MatrixToImageWriter.writeToStream(bitMatrix, imageFormat, outputStream, config);
-return outputStream.toByteArray();
+Graphics2D g2d = image.createGraphics();
+g2d.setColor(new Color(onColorArgb, true));
+// Loop over array and g2d.fillRect(...)
 ```
+The finalized canvas is exported using `ImageIO`.
 
 ---
 
@@ -100,12 +64,10 @@ return outputStream.toByteArray();
 
 ### Style Architecture: [style.css](file:///Users/satwikpoddar/devlopment/java-project/canteen/src/main/resources/static/css/style.css)
 The page implements high-fidelity glassmorphism with responsive layout rules:
-- **Design Tokens**: Centralized variables (`:root`) dictate standard fonts (`Outfit`, `Inter`), spacing, and primary colors.
-- **Ambient Lighting**: Animated background circles utilize blur filters (`filter: blur(140px)`) and CSS animations to create a floating glow.
-- **Glass Card Mechanics**: Translucent cards combine background alphas (`rgba(22, 28, 45, 0.45)`) and thin borders (`1px solid rgba(255, 255, 255, 0.08)`) with `backdrop-filter: blur(16px)` to integrate background lighting.
+- **Design Tokens**: Centralized variables (`:root`) dictate standard fonts (`Outfit`, `Inter`).
+- **Ambient Lighting**: Animated background circles utilize blur filters (`filter: blur(140px)`) and CSS animations.
 
 ### Client-side Logic: [app.js](file:///Users/satwikpoddar/devlopment/java-project/canteen/src/main/resources/static/js/app.js)
-The JS controller orchestrates event management and processes binary data.
 
 #### Binary Stream Caching (Blob URLs)
 Rather than rendering base64 strings directly in HTML (which inflates bandwidth by ~33%), the UI reads the raw response stream as a JavaScript `Blob` object, then instantiates a temporary, local Browser Object URL:
