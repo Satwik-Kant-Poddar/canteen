@@ -46,7 +46,6 @@ import java.util.regex.Pattern;
 public final class QrSegment {
 	
 	/*---- Static factory functions (mid level) ----*/
-	
 	/**
 	 * Returns a segment representing the specified binary data
 	 * encoded in byte mode. All input byte arrays are acceptable.
